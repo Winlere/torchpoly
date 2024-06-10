@@ -41,12 +41,21 @@ class ArgumentedInfo(nn.Module):
         ainfo.aub_bias = self.aub_bias.clone()
         return ainfo
 
-    def forward(self, x: "ArgumentedInfo") -> "ArgumentedInfo":
+    def forward(self, x: "ArgumentedInfo", compute_alg=True) -> "ArgumentedInfo":
         """
         This is a stateful operation. The input x is the input of the layer.
         After the forward operation, the ArgumentedInfo object will be updated to
         the backpropagated state
         """
+
+        def debug():
+            print(f"Forward (lb ub): lb={self.lb} ub={self.ub}")
+            print(
+                f"Forward: alb_lb={alb_lb} alb_ub={alb_ub} aub_ub={aub_ub} aub_lb={aub_lb}"
+            )
+
+        assert x.out_features == self.in_features
+
         alb_lb = (self.alb + self.alb.abs()) / 2
         alb_ub = (self.alb - self.alb.abs()) / 2
         aub_ub = (self.aub + self.aub.abs()) / 2
@@ -59,12 +68,21 @@ class ArgumentedInfo(nn.Module):
         # TODO Implement a direct CUDA/C++ operator for this. Reduce 2x overhead.
         self.lb = (alb_lb @ x.lb) + (alb_ub @ x.ub) + self.alb_bias
         self.ub = (aub_ub @ x.ub) + (aub_lb @ x.lb) + self.aub_bias
+
+        if not compute_alg:
+            debug()
+            return self
         self.alb = (alb_lb @ x.alb) + (alb_ub @ x.aub)
         self.aub = (aub_ub @ x.aub) + (aub_lb @ x.alb)
-        self.alb_bias = (alb_lb @ x.alb_bias) + (alb_ub @ x.aub_bias)
-        self.aub_bias = (aub_ub @ x.aub_bias) + (aub_lb @ x.alb_bias)
+        self.alb_bias = (alb_lb @ x.alb_bias) + (alb_ub @ x.aub_bias) + self.alb_bias
+        self.aub_bias = (aub_ub @ x.aub_bias) + (aub_lb @ x.alb_bias) + self.aub_bias
         self.in_features, self.out_features = x.in_features, self.in_features
+        debug()
         return self
+
+    @property
+    def shape(self):
+        return self.in_features, self.out_features
 
 
 ALL = [ArgumentedInfo]
