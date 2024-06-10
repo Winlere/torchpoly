@@ -1,5 +1,3 @@
-import torch
-
 from torchpoly.cert.ticket import Ticket
 
 
@@ -17,10 +15,6 @@ class Certificate:
     def update(self, x: Ticket) -> None:
         self.ticket.lb.copy_(x.lb)
         self.ticket.ub.copy_(x.ub)
-
-    def __call__(self, x: Ticket) -> Ticket:
-        with torch.no_grad():
-            return Ticket.from_ticket(self.forward(x))
 
     def cuda(self):
         self.ticket.cuda()

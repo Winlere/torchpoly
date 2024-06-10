@@ -9,7 +9,7 @@ class LinearCertificate(Certificate):
 
     def forward(self, x: Ticket) -> Ticket:
         self.ticket = self.ticket(x, with_alg=False)
-        return self.ticket
+        return Ticket.from_ticket(self.ticket)
 
 
 class Linear(Module, nn.Linear):

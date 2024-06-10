@@ -26,7 +26,8 @@ class ReLUCertificate(Certificate):
         self.ticket.aub = torch.diag(ub_k)
         self.ticket.alb_bias = torch.mul(lb_k, x.lb)
         self.ticket.aub_bias = ub_b
-        return self.ticket
+
+        return Ticket.from_ticket(self.ticket)
 
 
 class ReLU(Module, nn.ReLU):
