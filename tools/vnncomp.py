@@ -1,7 +1,6 @@
 import argparse
 import csv
 import os
-import onnx
 import torch
 import vnnlib
 import vnnlib.compat as compat
@@ -14,7 +13,7 @@ import torchpoly.nn as nn
 import torchpoly.onnx as torchpoly_onnx
 
 
-def run_vnncomp(
+def verify(
     model: nn.Module, precond: List[Tuple], postcond: List[Tuple], device=None
 ) -> torchpoly.VerifyResult:
     lb, ub = [x[0] for x in precond], [x[1] for x in precond]
@@ -31,9 +30,42 @@ def run_vnncomp(
     return verifier(model, bound)
 
 
+def run_vnncomp(model, prop, device):
+    print(f"Verifying {model} {prop} ...")
+
+    try:
+        onnx_model = torchpoly_onnx.load(model)
+        model = torchpoly_onnx.as_sequential(onnx_model).to(device=device)
+
+        vnn_node = vnnlib.parse_file(prop)
+        properties = compat.CompatTransformer("X", "Y").transform(vnn_node)
+    except Exception:
+        print(f"Failed to load {model} {prop}")
+        return 0, 0, 1
+
+    holds, unknowns, fails = 0, 0, 0
+    for index, (precond, postcond) in enumerate(properties):
+        try:
+            result = verify(model, precond, postcond[0], device)
+        except Exception:
+            fails += 1
+            continue
+
+        print(f"Property {index}:", result.value)
+        match result:
+            case torchpoly.VerifyResult.HOLD:
+                holds += 1
+            case torchpoly.VerifyResult.UNKNOWN:
+                unknowns += 1
+
+    return holds, unknowns, fails
+
+
 def main(args: argparse.Namespace):
     home = os.path.dirname(args.instance)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    holds, unknowns, fails = 0, 0, 0
 
     with open(args.instance, "r") as f:
         reader = csv.reader(f)
@@ -41,17 +73,14 @@ def main(args: argparse.Namespace):
         for row in reader:
             model, prop = row[0], row[1]
 
-            print(f"Verifying {model} {prop} ...")
+            new_holds, new_unknowns, new_fails = run_vnncomp(
+                os.path.join(home, model), os.path.join(home, prop), device
+            )
+            holds += new_holds
+            unknowns += new_unknowns
+            fails += new_fails
 
-            onnx_model = torchpoly_onnx.load(os.path.join(home, model))
-            model = torchpoly_onnx.as_sequential(onnx_model).to(device=device)
-
-            vnn_node = vnnlib.parse_file(os.path.join(home, prop))
-            properties = compat.CompatTransformer("X", "Y").transform(vnn_node)
-
-            for index, (precond, postcond) in enumerate(properties):
-                result = run_vnncomp(model, precond, postcond[0], device)
-                print(f"Property {index}:", result.value)
+    print(f"Holds: {holds}, Unknowns: {unknowns}, Fails: {fails}")
 
 
 def parse_args() -> argparse.Namespace:
