@@ -3,7 +3,10 @@ import torch.nn as nn
 import vnnlib.compat
 import deeppoly
 import deeppoly.base
+import deeppoly.relu
+import deeppoly.postcondition
 import deeppoly.linear
+import deeppoly.sequencial
 import parse_onnx
 import vnnlib
 import argparse
@@ -19,17 +22,12 @@ def sanity_check():
     pattern.bias = nn.Parameter(b)
     test1 = deeppoly.linear.ArgumentedLinear(pattern)
     test2 = deeppoly.linear.ArgumentedLinear(pattern)
-    layers = [test1, test2]
+    relu1 = deeppoly.relu.ArgumentedRelu()
+    layers = [test1, relu1, test2]
 
     lb = [-1, -1]
-    ub = [1, 1]
-    input_info = deeppoly.base.ArgumentedInfo(
-        in_features=1, out_features=2, device=pattern.weight.device
-    )
-    input_info.lb = torch.tensor(lb, dtype=torch.float32)
-    input_info.ub = torch.tensor(ub, dtype=torch.float32)
-    input_info.alb_bias = torch.tensor(lb, dtype=torch.float32)
-    input_info.aub_bias = torch.tensor(ub, dtype=torch.float32)
+    ub = [2, 1]
+    input_info = deeppoly.base.create_input_info(lb, ub)
     x = input_info.clone()
 
     for idx, layer in enumerate(layers):
@@ -49,6 +47,33 @@ def sanity_check():
             layer.update_bounds(x)
             print(f"    (Update) Layer {idx}: {back_info.lb} {back_info.ub}")
 
+    seq = deeppoly.sequencial.ArgumentedSequential(*layers)
+    x = seq.forward(input_info)
+    print(f"Sequential: {x.lb} {x.ub}")
+
+
+def run_exp(precond, model, postcond):
+    """run an experiment of the model. 
+
+    Args:
+        precond (_type_): should be a list of tuples of lower and upper bounds
+        model (_type_): 
+        postcond (_type_): _description_
+    """
+    lb = [x[0] for x in precond]
+    ub = [x[1] for x in precond]
+
+    A = torch.tensor(postcond[0], dtype=torch.float32)
+    b = torch.tensor(postcond[1], dtype=torch.float32).reshape(-1)
+    
+    print(A,b)
+    input_info = deeppoly.base.create_input_info(lb=lb, ub=ub)
+    
+    pstcond = deeppoly.postcondition.ArgumentedPostcond(A=A, b=b)
+    argumented_model = deeppoly.sequencial.create_sequencial_from_dirty(model, pstcond)
+    input_info = argumented_model.forward(input_info)
+    print(input_info.lb, input_info.ub)
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Load ONNX model and develop")
@@ -56,13 +81,13 @@ if __name__ == "__main__":
         "--model",
         type=str,
         help="Path to ONNX model",
-        default="vnncomp2023_benchmarks-main/benchmarks/acasxu/onnx/ACASXU_run2a_1_1_batch_2000.onnx.gz",
+        default="vnncomp2023_benchmarks-main/benchmarks/acasxu/onnx/ACASXU_run2a_1_1_batch_2000.onnx",
     )
     parser.add_argument(
         "--vnnlib",
         type=str,
         help="Path to VNNLIB file (Property)",
-        default="vnncomp2023_benchmarks-main/benchmarks/acasxu/vnnlib/prop_1.vnnlib.gz",
+        default="vnncomp2023_benchmarks-main/benchmarks/acasxu/vnnlib/prop_1.vnnlib",
     )
     parser.add_argument(
         "--verbose",
@@ -72,11 +97,21 @@ if __name__ == "__main__":
     model_path = parser.parse_args().model
     model = parse_onnx.load_onnx(model_path)
 
-    ast_node = vnnlib.parse_file(parser.parse_args().vnnlib)
-    ast_res = vnnlib.compat.CompatTransformer("X", "Y").transform(ast_node)
-
     if parser.parse_args().verbose:
         torch.set_printoptions(threshold=1000)
         print(model)
-        print(*ast_res)
-        sanity_check()
+        # sanity_check()
+    
+    ast_vnn_node = vnnlib.parse_file(parser.parse_args().vnnlib)
+    property_list = vnnlib.compat.CompatTransformer("X", "Y").transform(ast_vnn_node)
+    
+    for prop in property_list:
+        precond, postcond = prop
+        
+        # I DONT KNOW WHAT'S GOING ON IN THE PARSER
+        postcond = postcond[0]
+        
+        print(precond, postcond)
+        run_exp(precond, model, postcond)
+        
+    

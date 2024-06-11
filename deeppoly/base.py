@@ -84,5 +84,24 @@ class ArgumentedInfo(nn.Module):
     def shape(self):
         return self.in_features, self.out_features
 
+def create_input_info(lb, ub, device=torch.device("cpu")) -> ArgumentedInfo:
+    """Create the ArgumentedInfo as a input
 
-ALL = [ArgumentedInfo]
+    Args:
+        lb (array-like): lowerbounds
+        ub (array-like): upperbounds
+    """
+    L1 = len(lb)
+    L2 = len(ub)
+    if L1 != L2:
+        raise ValueError("The length of lb and ub should be the same. Consider flatten")
+    input_info = ArgumentedInfo(1, L1, device)
+    lbb = torch.tensor(lb, device=device)
+    ubb = torch.tensor(ub, device=device)
+    input_info.lb.copy_(lbb)
+    input_info.ub.copy_(ubb)
+    input_info.alb_bias = torch.tensor(lbb, dtype=torch.float)
+    input_info.aub_bias = torch.tensor(ubb, dtype=torch.float)
+    return input_info
+
+ALL = [ArgumentedInfo, create_input_info]
