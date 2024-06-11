@@ -1,5 +1,6 @@
-from typing import Tuple
 import torch.nn as nn
+
+from typing import Tuple
 
 from torchpoly.cert.certificate import Certificate, Trace
 from torchpoly.cert.ticket import Ticket

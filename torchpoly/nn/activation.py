@@ -1,6 +1,7 @@
-from typing import Tuple
 import torch
 import torch.nn as nn
+
+from typing import Tuple
 
 from torchpoly.cert.certificate import Certificate, Trace
 from torchpoly.cert.ticket import Ticket
@@ -54,4 +55,4 @@ class ReLU(Module, nn.ReLU):
         super(ReLU, self).__init__(inplace=inplace)
 
     def certify(self, bound: Ticket, device=None) -> Certificate:
-        return ReLUCertificate(Ticket.zeros(1, 1, device=device))
+        return ReLUCertificate(bound, Ticket.zeros(1, 1, device=device))
