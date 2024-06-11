@@ -4,9 +4,9 @@ import deeppoly.base as base
 
 
 class ArgumentedRelu(nn.ReLU):
-    def __init__(self):
+    def __init__(self, device=torch.device("cpu")):
         super().__init__()
-        self.immediate_info = base.ArgumentedInfo(1, 1, torch.device("cpu"))
+        self.immediate_info = base.ArgumentedInfo(1, 1, device=device)
 
     def forward(
         self,
