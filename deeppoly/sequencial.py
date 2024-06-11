@@ -19,7 +19,7 @@ class ArgumentedSequential(nn.Sequential):
             )
             return super().forward(x)
         input_info = x.clone()
-        print(f"Input: {input_info.lb} {input_info.ub}")
+        # print(f"Input: {input_info.lb} {input_info.ub}")
         # forward part
         for idx, layer in enumerate(self.layers):
             x = layer.forward(x)
@@ -59,10 +59,11 @@ def create_sequencial_from_dirty(model: nn.Module, post_cond_layer:nn.Module = N
         elif isinstance(layer, nn.ReLU):
             layers.append(deeppoly.relu.ArgumentedRelu(torch.device("cuda")))
         else:
-            print(f"Warning: Unknown layer (ignoring) {layer}")
+            # print(f"Warning: Unknown layer (ignoring) {layer}")
+            pass
     if post_cond_layer is not None:
-        layers.append(post_cond_layer.to(device))
-    print(layers)
+        layers.append(post_cond_layer)
+    # print(layers)
     return ArgumentedSequential(*layers)
 
 ALL = [ArgumentedSequential, create_sequencial_from_dirty]
