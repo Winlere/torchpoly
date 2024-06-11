@@ -104,7 +104,7 @@ class Ticket(nn.Module):
 
         ticket = Ticket(new_lb, new_ub, new_alb, new_aub, new_alb_bias, new_aub_bias)
 
-        logger.debug(f"lb={ticket.lb} ub={ticket.ub}")
-        logger.debug(f"alb_lb={alb_lb} alb_ub={alb_ub} aub_lb={aub_lb} aub_ub={aub_ub}")
+        # logger.debug(f"lb={ticket.lb} ub={ticket.ub}")
+        # logger.debug(f"alb_lb={alb_lb} alb_ub={alb_ub} aub_lb={aub_lb} aub_ub={aub_ub}")
 
         return ticket
