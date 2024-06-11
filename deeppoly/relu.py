@@ -30,13 +30,13 @@ class ArgumentedRelu(nn.ReLU):
             torch.max(prev.ub - prev.lb, torch.ones_like(prev.ub)),
         )
         ubb = reluub - torch.mul(ubk, reluub)
-        lbk = torch.lt(prev.lb + prev.ub, torch.zeros_like(prev.lb)).float()
+        lbk = torch.gt(prev.lb + prev.ub, torch.zeros_like(prev.lb)).float()
         lbb = torch.zeros_like(prev.lb)
         self.immediate_info.lb = torch.mul(lbk, prev.lb) + lbb
         self.immediate_info.ub = torch.mul(ubk, prev.ub) + ubb
         self.immediate_info.alb = torch.diag(lbk)
         self.immediate_info.aub = torch.diag(ubk)
-        self.immediate_info.alb_bias = torch.mul(lbk, prev.lb)
+        self.immediate_info.alb_bias = lbb
         self.immediate_info.aub_bias = ubb
         self.immediate_info.in_features = prev.out_features
         self.immediate_info.out_features = prev.out_features
