@@ -22,16 +22,16 @@ def make_linear_simple():
 
 def test_linear_simple():
     model = make_linear_simple()
-    bound = Ticket.from_bound([-1, -1], [1, 1])
+    bound = Ticket.from_bound([-1, -1], [1, 1]).cuda()
 
     state = (Ticket.from_ticket(bound), list())
     for layer in model:
-        cert = layer.certify(bound)
+        cert = layer.cuda().certify(bound)
         state = cert.forward(state)
 
     x, _ = state
-    assert torch.allclose(x.lb, torch.tensor([-2, -2], dtype=torch.float32))
-    assert torch.allclose(x.ub, torch.tensor([2, 2], dtype=torch.float32))
+    assert torch.allclose(x.cpu().lb, torch.tensor([-2, -2], dtype=torch.float32))
+    assert torch.allclose(x.cpu().ub, torch.tensor([2, 2], dtype=torch.float32))
 
 
 if __name__ == "__main__":
