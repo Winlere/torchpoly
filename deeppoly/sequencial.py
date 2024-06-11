@@ -31,10 +31,10 @@ class ArgumentedSequential(nn.Sequential):
             if idx != 0:
                 backsub_info.forward(input_info)
                 layer.update_bounds(backsub_info)
-        return backsub_info
+        return x
     
     def backsubstitution(self, x: base.ArgumentedInfo):
-        for layer in self.layers:
+        for layer in reversed(self.layers):
             x = layer.backsubstitution(x)
         return x
 
