@@ -289,12 +289,41 @@ protobuf = ">=3.20.2"
 reference = ["google-re2", "pillow"]
 
 [[package]]
+name = "onnx2pytorch"
+version = "0.4.1"
+description = "Library to transform onnx model to pytorch."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+onnx = ">=1.6.0"
+torch = ">=1.4.0"
+torchvision = ">=0.9.0"
+
+[[package]]
 name = "packaging"
 version = "24.1"
 description = "Core utilities for Python packages"
 category = "dev"
 optional = false
 python-versions = ">=3.8"
+
+[[package]]
+name = "pillow"
+version = "10.3.0"
+description = "Python Imaging Library (Fork)"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-inline-tabs", "sphinx-removed-in", "sphinxext-opengraph"]
+fpx = ["olefile"]
+mic = ["olefile"]
+tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
+typing = ["typing-extensions"]
+xmp = ["defusedxml"]
 
 [[package]]
 name = "pluggy"
@@ -398,6 +427,22 @@ opt-einsum = ["opt-einsum (>=3.3)"]
 optree = ["optree (>=0.9.1)"]
 
 [[package]]
+name = "torchvision"
+version = "0.18.1"
+description = "image and video datasets and models for torch deep learning"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = "*"
+pillow = ">=5.3.0,<8.3.0 || >=8.4.0"
+torch = "2.3.1"
+
+[package.extras]
+scipy = ["scipy"]
+
+[[package]]
 name = "triton"
 version = "2.3.1"
 description = "A language and compiler for custom Deep Learning operations"
@@ -432,7 +477,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "05edf7dd3b949781d3044510e1183fbf663483412f522d2d037be85dec5aff27"
+content-hash = "edb19b3b10517dc192dcfbf7cd12780fbe53088ffdc6b16a683aba7aa7b92a01"
 
 [metadata.files]
 atomicwrites = []
@@ -461,7 +506,9 @@ nvidia-nccl-cu12 = []
 nvidia-nvjitlink-cu12 = []
 nvidia-nvtx-cu12 = []
 onnx = []
+onnx2pytorch = []
 packaging = []
+pillow = []
 pluggy = []
 protobuf = []
 py = []
@@ -469,6 +516,7 @@ pytest = []
 sympy = []
 tbb = []
 torch = []
+torchvision = []
 triton = []
 typing-extensions = []
 wcwidth = []
