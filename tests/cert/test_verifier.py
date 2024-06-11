@@ -3,7 +3,7 @@ import torch
 
 
 from torchpoly.cert.ticket import Ticket
-from torchpoly.cert.verifier import Verifier, VerifyResult
+from torchpoly.verifier import Verifier, VerifyResult
 from torchpoly.nn.container import Sequential
 
 from tests.nn.test_activation import make_relu_simple
