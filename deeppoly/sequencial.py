@@ -39,11 +39,15 @@ class ArgumentedSequential(nn.Sequential):
         return x
 
 
-def create_sequencial_from_dirty(model: nn.Module, post_cond_layer = None):
+def create_sequencial_from_dirty(model: nn.Module, post_cond_layer:nn.Module = None, device=torch.device("cuda")) -> ArgumentedSequential:
     layers = []
-    model.train(False)
+    if model.training:
+        print("Warning: The model is in training mode. The model should be in evaluation mode.")
+        raise ValueError("The model is in training mode.")
+    
+    model.to(device)
+
     def visit_modules(model: torch.nn.Module): 
-        print(list(model.children()))
         if len(list(model.children())) == 0:
             yield model
         else:
@@ -51,15 +55,14 @@ def create_sequencial_from_dirty(model: nn.Module, post_cond_layer = None):
                 yield from visit_modules(c)
     for layer in visit_modules(model):
         if isinstance(layer, nn.Linear):
-            print("Linear")
             layers.append(deeppoly.linear.ArgumentedLinear(layer))
         elif isinstance(layer, nn.ReLU):
-            print("Relu")
-            layers.append(deeppoly.relu.ArgumentedRelu())
+            layers.append(deeppoly.relu.ArgumentedRelu(torch.device("cuda")))
         else:
-            print(f"Warning: Unknown layer {layer}")
+            print(f"Warning: Unknown layer (ignoring) {layer}")
     if post_cond_layer is not None:
-        layers.append(post_cond_layer)
+        layers.append(post_cond_layer.to(device))
+    print(layers)
     return ArgumentedSequential(*layers)
 
 ALL = [ArgumentedSequential, create_sequencial_from_dirty]
