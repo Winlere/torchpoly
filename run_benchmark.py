@@ -20,7 +20,7 @@ def run_exp(precond, model, postcond, device=torch.device("cuda")):
     ub = [x[1] for x in precond]
 
     A = torch.tensor(postcond[0], dtype=torch.float32)
-    b = torch.tensor(postcond[1], dtype=torch.float32).reshape(-1)
+    b = - torch.tensor(postcond[1], dtype=torch.float32).reshape(-1)
     
     # print(A,b)
     input_info = deeppoly.base.create_input_info(lb=lb, ub=ub,device=device)
@@ -30,8 +30,9 @@ def run_exp(precond, model, postcond, device=torch.device("cuda")):
     argumented_model = deeppoly.sequencial.create_sequencial_from_dirty(model, pstcond)
 
     input_info = argumented_model.forward(input_info)
-    input_info.ub = input_info.ub.cpu().detach().numpy()
-    if max(input_info.ub) <= 0:
+    res = input_info.ub.cpu().detach().numpy()
+    print(res)
+    if max(res) <= 0:
         return True
     return False
     # print(input_info.lb, input_info.ub, postcond)
@@ -51,9 +52,12 @@ if __name__ == "__main__":
             print("PATHS", model_path, prop_path)
             model = parse_onnx.load_onnx(model_path)
             model = model.eval()
-            
-            ast_vnn_node = vnnlib.parse_file(prop_path)
-            property_list = vnnlib.compat.CompatTransformer("X", "Y").transform(ast_vnn_node)
+            try:
+                ast_vnn_node = vnnlib.parse_file(prop_path)
+                property_list = vnnlib.compat.CompatTransformer("X", "Y").transform(ast_vnn_node)
+            except:
+                print("Error in parsing the property")
+                continue
             
             for prop in property_list:
                 precond, postcond = prop
