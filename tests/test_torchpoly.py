@@ -17,12 +17,7 @@ def sanity_check():
     layer2.bias = torch.nn.Parameter(b)
 
     model = [layer1, layer2]
-
-    bound = Ticket.zeros(1, 2)
-    bound.lb = torch.tensor([-1, -1], dtype=torch.float32)
-    bound.ub = torch.tensor([1, 1], dtype=torch.float32)
-    bound.alb_bias = torch.tensor([-1, -1], dtype=torch.float32)
-    bound.aub_bias = torch.tensor([1, 1], dtype=torch.float32)
+    bound = Ticket.from_bound([-1, -1], [1, 1])
 
     state = (Ticket.from_ticket(bound), list())
     for layer in model:

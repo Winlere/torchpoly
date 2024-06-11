@@ -1,3 +1,4 @@
+from typing import List
 import torch
 import torch.nn as nn
 
@@ -58,6 +59,19 @@ class Ticket(nn.Module):
             ticket.alb_bias.clone(),
             ticket.aub_bias.clone(),
         )
+
+    @classmethod
+    def from_bound(cls, lb: List[float], ub: List[float], device=None):
+        assert len(lb) == len(ub)
+
+        factory_kwargs = {"device": device, "dtype": torch.float32}
+
+        ticket = cls.zeros(1, len(lb), device=device)
+        ticket.lb.copy_(torch.tensor(lb, **factory_kwargs))
+        ticket.ub.copy_(torch.tensor(ub, **factory_kwargs))
+        ticket.alb_bias.copy_(torch.tensor(lb, **factory_kwargs))
+        ticket.aub_bias.copy_(torch.tensor(ub, **factory_kwargs))
+        return ticket
 
     def forward(self, x: "Ticket", with_alg: bool = True) -> "Ticket":
         with torch.no_grad():
