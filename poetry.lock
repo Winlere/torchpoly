@@ -159,6 +159,14 @@ extra = ["lxml (>=4.6)", "pygraphviz (>=1.12)", "pydot (>=2.0)", "sympy (>=1.10)
 test = ["pytest (>=7.2)", "pytest-cov (>=4.0)"]
 
 [[package]]
+name = "numpy"
+version = "1.26.4"
+description = "Fundamental package for array computing in Python"
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[[package]]
 name = "nvidia-cublas-cu12"
 version = "12.1.3.1"
 description = "CUBLAS native runtime libraries"
@@ -266,6 +274,21 @@ optional = false
 python-versions = ">=3"
 
 [[package]]
+name = "onnx"
+version = "1.16.1"
+description = "Open Neural Network Exchange"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = ">=1.20"
+protobuf = ">=3.20.2"
+
+[package.extras]
+reference = ["google-re2", "pillow"]
+
+[[package]]
 name = "packaging"
 version = "24.1"
 description = "Core utilities for Python packages"
@@ -283,6 +306,14 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
 dev = ["pre-commit", "tox"]
+
+[[package]]
+name = "protobuf"
+version = "5.27.1"
+description = ""
+category = "main"
+optional = false
+python-versions = ">=3.8"
 
 [[package]]
 name = "py"
@@ -401,7 +432,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "c18428de730dc38dad1199ad0ca089e1e44e21d60e898ecb76bcf498bda52ec5"
+content-hash = "05edf7dd3b949781d3044510e1183fbf663483412f522d2d037be85dec5aff27"
 
 [metadata.files]
 atomicwrites = []
@@ -416,6 +447,7 @@ mkl = []
 more-itertools = []
 mpmath = []
 networkx = []
+numpy = []
 nvidia-cublas-cu12 = []
 nvidia-cuda-cupti-cu12 = []
 nvidia-cuda-nvrtc-cu12 = []
@@ -428,8 +460,10 @@ nvidia-cusparse-cu12 = []
 nvidia-nccl-cu12 = []
 nvidia-nvjitlink-cu12 = []
 nvidia-nvtx-cu12 = []
+onnx = []
 packaging = []
 pluggy = []
+protobuf = []
 py = []
 pytest = []
 sympy = []
