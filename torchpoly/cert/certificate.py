@@ -1,29 +1,18 @@
+from typing import List, Tuple
+
 from torchpoly.cert.ticket import Ticket
+
+
+Trace = List["Certificate"]
 
 
 class Certificate:
 
-    def __init__(self, ticket: Ticket):
-        self.ticket = ticket
+    def __init__(self, bound: Ticket):
+        self.bound = bound
 
-    def forward(self, x: Ticket) -> Ticket:
+    def forward(self, state: Tuple[Ticket, Trace]) -> Tuple[Ticket, Trace]:
         raise NotImplementedError
 
     def backward(self, x: Ticket) -> Ticket:
-        return x(self.ticket)
-
-    def update(self, x: Ticket) -> None:
-        self.ticket.lb.copy_(x.lb)
-        self.ticket.ub.copy_(x.ub)
-
-    def cuda(self):
-        self.ticket.cuda()
-        return self
-
-    def cpu(self):
-        self.ticket.cpu()
-        return self
-
-    def to(self, device=None, non_blocking: bool = False):
-        self.ticket.to(device=device, non_blocking=non_blocking)
-        return self
+        raise NotImplementedError

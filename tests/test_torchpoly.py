@@ -24,26 +24,10 @@ def sanity_check():
     bound.alb_bias = torch.tensor([-1, -1], dtype=torch.float32)
     bound.aub_bias = torch.tensor([1, 1], dtype=torch.float32)
 
-    ticket = Ticket.from_ticket(bound)
-
-    certs = []
-    for idx, layer in enumerate(model):
-        cert = layer.certify()
-
-        ticket = cert.forward(ticket)
-        print(f"(Forward) Layer {idx}: {ticket.lb}, {ticket.ub}")
-        back = Ticket.from_ticket(ticket)
-
-        for r_idx, r_cert in enumerate(reversed(certs)):
-            back = r_cert.backward(back)
-            print(f"\t(Backsubstitute) Layer {idx - r_idx - 1}: {back.lb} {back.ub}")
-
-        if idx != 0:
-            back = back(bound)
-            cert.update(ticket)
-            print(f"\t(Update) Layer {idx}: {back.lb}, {back.ub}")
-
-        certs.append(cert)
+    state = (Ticket.from_ticket(bound), list())
+    for layer in model:
+        cert = layer.certify(bound)
+        state = cert.forward(state)
 
 
 if __name__ == "__main__":

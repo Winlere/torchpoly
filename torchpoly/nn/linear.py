@@ -1,15 +1,34 @@
+from typing import Tuple
 import torch.nn as nn
 
-from torchpoly.cert.certificate import Certificate
+from torchpoly.cert.certificate import Certificate, Trace
 from torchpoly.cert.ticket import Ticket
 from torchpoly.nn.module import Module
 
 
 class LinearCertificate(Certificate):
 
-    def forward(self, x: Ticket) -> Ticket:
-        self.ticket = self.ticket(x, with_alg=False)
-        return Ticket.from_ticket(self.ticket)
+    def __init__(self, bound: Ticket, immediate: Ticket):
+        super(LinearCertificate, self).__init__(bound)
+        self.immediate = immediate
+
+    def forward(self, state: Tuple[Ticket, Trace]) -> Tuple[Ticket, Trace]:
+        x, trace = state
+
+        self.immediate = self.immediate(x, with_alg=False)
+
+        back = Ticket.from_ticket(self.immediate)
+        for cert in reversed(trace):
+            back = cert.backward(back)
+
+        back = back(self.bound)
+        self.immediate.lb.copy_(back.lb)
+        self.immediate.ub.copy_(back.ub)
+
+        return Ticket.from_ticket(self.immediate), trace + [self]
+
+    def backward(self, x: Ticket) -> Ticket:
+        return x(self.immediate)
 
 
 class Linear(Module, nn.Linear):
@@ -19,16 +38,16 @@ class Linear(Module, nn.Linear):
     ):
         super(Linear, self).__init__(in_features, out_features, bias, device=device)
 
-    def certify(self, device=None) -> Certificate:
+    def certify(self, bound: Ticket, device=None) -> Certificate:
         if device is None:
             device = self.weight.device
 
-        ticket = Ticket.zeros(self.in_features, self.out_features, device=device)
-        ticket.alb.copy_(self.weight)
-        ticket.aub.copy_(self.weight)
+        immediate = Ticket.zeros(self.in_features, self.out_features, device=device)
+        immediate.alb.copy_(self.weight)
+        immediate.aub.copy_(self.weight)
 
         if self.bias is not None:
-            ticket.alb_bias.copy_(self.bias)
-            ticket.aub_bias.copy_(self.bias)
+            immediate.alb_bias.copy_(self.bias)
+            immediate.aub_bias.copy_(self.bias)
 
-        return LinearCertificate(ticket)
+        return LinearCertificate(bound, immediate)
