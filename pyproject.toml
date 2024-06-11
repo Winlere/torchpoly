@@ -9,6 +9,7 @@ python = "^3.10"
 torch = "^2.3.1"
 onnx = "^1.16.1"
 onnx2pytorch = "^0.4.1"
+vnnlib = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

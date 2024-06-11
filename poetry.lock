@@ -467,6 +467,25 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
+name = "vnnlib"
+version = "0.0.1.post1"
+description = ""
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = ">=1.19"
+
+[package.extras]
+dev = ["mypy (>=1.5.0)", "black (>=23.1.0)", "isort (>=5.12.0)", "coverage (>=7.1.0)", "pytest (>=7.2.1)"]
+lint = ["mypy (>=1.8.0)"]
+style = ["black (>=23.1.0)", "isort (>=5.12.0)"]
+test = ["coverage (>=7.1.0)", "pytest (>=7.2.1)"]
+docs = ["furo (>=2022.12.7)", "sphinx (>=6.1.3)"]
+dist = ["build", "twine"]
+
+[[package]]
 name = "wcwidth"
 version = "0.2.13"
 description = "Measures the displayed width of unicode strings in a terminal"
@@ -477,7 +496,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "edb19b3b10517dc192dcfbf7cd12780fbe53088ffdc6b16a683aba7aa7b92a01"
+content-hash = "f77640457dcba750cf52fc2d60bb2ca9a379221280f791c29a853e6b7424b2d4"
 
 [metadata.files]
 atomicwrites = []
@@ -519,4 +538,5 @@ torch = []
 torchvision = []
 triton = []
 typing-extensions = []
+vnnlib = []
 wcwidth = []
