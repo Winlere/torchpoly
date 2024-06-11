@@ -25,14 +25,14 @@ class ReLUCertificate(Certificate):
         )
         ub_b = relu_ub - torch.mul(ub_k, relu_ub)
 
-        lb_k = torch.lt(x.lb + x.ub, torch.zeros_like(x.lb)).float()
+        lb_k = torch.gt(x.lb + x.ub, torch.zeros_like(x.lb)).float()
         lb_b = torch.zeros_like(x.lb)
 
         self.immediate.lb = torch.mul(lb_k, x.lb) + lb_b
         self.immediate.ub = torch.mul(ub_k, x.ub) + ub_b
         self.immediate.alb = torch.diag(lb_k)
         self.immediate.aub = torch.diag(ub_k)
-        self.immediate.alb_bias = torch.mul(lb_k, x.lb)
+        self.immediate.alb_bias = lb_b
         self.immediate.aub_bias = ub_b
 
         back = Ticket.from_ticket(self.immediate)
