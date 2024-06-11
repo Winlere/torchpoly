@@ -19,6 +19,7 @@ class ArgumentedSequential(nn.Sequential):
             )
             return super().forward(x)
         input_info = x.clone()
+        print(f"Input: {input_info.lb} {input_info.ub}")
         # forward part
         for idx, layer in enumerate(self.layers):
             x = layer.forward(x)
@@ -30,7 +31,7 @@ class ArgumentedSequential(nn.Sequential):
             if idx != 0:
                 backsub_info.forward(input_info)
                 layer.update_bounds(backsub_info)
-        return x
+        return backsub_info
     
     def backsubstitution(self, x: base.ArgumentedInfo):
         for layer in self.layers:
@@ -40,16 +41,14 @@ class ArgumentedSequential(nn.Sequential):
 
 def create_sequencial_from_dirty(model: nn.Module, post_cond_layer = None):
     layers = []
-    
+    model.train(False)
     def visit_modules(model: torch.nn.Module): 
-        print("Visist", model)
         print(list(model.children()))
         if len(list(model.children())) == 0:
             yield model
         else:
             for c in model.children():
                 yield from visit_modules(c)
-    print("Visist", list(visit_modules(model)))
     for layer in visit_modules(model):
         if isinstance(layer, nn.Linear):
             print("Linear")
@@ -59,10 +58,8 @@ def create_sequencial_from_dirty(model: nn.Module, post_cond_layer = None):
             layers.append(deeppoly.relu.ArgumentedRelu())
         else:
             print(f"Warning: Unknown layer {layer}")
-            
     if post_cond_layer is not None:
         layers.append(post_cond_layer)
-    print(layers)
     return ArgumentedSequential(*layers)
 
 ALL = [ArgumentedSequential, create_sequencial_from_dirty]
