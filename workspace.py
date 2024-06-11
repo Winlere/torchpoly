@@ -10,7 +10,7 @@ import deeppoly.sequencial
 import parse_onnx
 import vnnlib
 import argparse
-
+import run_benchmark 
 
 def sanity_check():
     W = torch.tensor([1, 1, 1, -1], dtype=torch.float32).reshape(2, 2)
@@ -46,29 +46,6 @@ def sanity_check():
     
 
 
-def run_exp(precond, model, postcond, device=torch.device("cuda")):
-    """run an experiment of the model. 
-
-    Args:
-        precond (_type_): should be a list of tuples of lower and upper bounds
-        model (_type_): 
-        postcond (_type_): _description_
-    """
-    lb = [x[0] for x in precond]
-    ub = [x[1] for x in precond]
-
-    A = torch.tensor(postcond[0], dtype=torch.float32)
-    b = torch.tensor(postcond[1], dtype=torch.float32).reshape(-1)
-    
-    print(A,b)
-    input_info = deeppoly.base.create_input_info(lb=lb, ub=ub,device=device)
-    
-    pstcond = deeppoly.postcondition.ArgumentedPostcond(A=A, b=b)
-    argumented_model = deeppoly.sequencial.create_sequencial_from_dirty(model)
-
-    input_info = argumented_model.forward(input_info)
-    print(input_info.lb, input_info.ub)
-    # check if input_info is on GPU
     
 
 if __name__ == "__main__":
@@ -110,6 +87,6 @@ if __name__ == "__main__":
         postcond = postcond[0]
         
         print(precond, postcond)
-        run_exp(precond, model, postcond)
+        run_benchmark.run_exp(precond, model, postcond)
         
     
