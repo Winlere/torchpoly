@@ -4,17 +4,17 @@ import deeppoly.base as base
 import deeppoly.linear
 
 class ArgumentedPostcond(deeppoly.linear.ArgumentedLinear):
-        def __init__(self, A, b):
+        def __init__(self, A, b, device=torch.device("cpu")):
                 """Accept a postcondition and construct a postcondition layer. (The nature is a linear)
-                A postcondition are linear constraint(s) Ax + b >= 0. 
+                A postcondition are linear constraint(s) Ax + b <= 0. 
                 Args:
                     A (array-like): The matrix A. Each row represents a constraint.
                     b (array-like): The vector b.
                 """
                 temp = nn.Linear(A.shape[1], A.shape[0])
                 temp.train(False)
-                temp.weight = nn.Parameter(torch.tensor(A, dtype=torch.float32))
-                temp.bias = nn.Parameter(torch.tensor(b, dtype=torch.float32))
+                temp.weight = nn.Parameter(torch.tensor(A, dtype=torch.float32, device=device))
+                temp.bias = nn.Parameter(torch.tensor(b, dtype=torch.float32, device=device))
                 super().__init__(temp)
 
 ALL = [ArgumentedPostcond]
