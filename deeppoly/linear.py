@@ -18,8 +18,9 @@ class ArgumentedLinear(nn.Linear):
 
         self.immediate_info.alb.copy_(linear.weight)
         self.immediate_info.aub.copy_(linear.weight)
-        self.immediate_info.alb_bias.copy_(linear.bias)
-        self.immediate_info.aub_bias.copy_(linear.bias)
+        if linear.bias is not None:
+            self.immediate_info.alb_bias.copy_(linear.bias)
+            self.immediate_info.aub_bias.copy_(linear.bias)
 
     def forward(
         self,
