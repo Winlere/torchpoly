@@ -1,6 +1,7 @@
 import logging
 import torch
 
+from torchpoly.cert.certificate import Trace
 from torchpoly.nn.container import Sequential
 from torchpoly.cert.ticket import Ticket
 
@@ -12,7 +13,7 @@ def test_sequential_simple():
     linear = Sequential(*make_linear_simple()).cuda()
     bound = Ticket.from_bound([-1, -1], [1, 1]).cuda()
 
-    state = (Ticket.from_ticket(bound), list())
+    state = (Ticket.from_ticket(bound), Trace())
     cert = linear.certify(bound)
     state = cert.forward(state)
 
@@ -23,7 +24,7 @@ def test_sequential_simple():
     relu = Sequential(*make_relu_simple()).cuda()
     bound = Ticket.from_bound([-1, -1], [1, 1]).cuda()
 
-    state = (Ticket.from_ticket(bound), list())
+    state = (Ticket.from_ticket(bound), Trace())
     cert = relu.certify(bound)
     state = cert.forward(state)
 
@@ -37,7 +38,7 @@ def test_sequential_compose():
     linear = Sequential(Sequential(layers[0]), Sequential(layers[1])).cuda()
     bound = Ticket.from_bound([-1, -1], [1, 1]).cuda()
 
-    state = (Ticket.from_ticket(bound), list())
+    state = (Ticket.from_ticket(bound), Trace())
     cert = linear.certify(bound)
     state = cert.forward(state)
 
@@ -49,7 +50,7 @@ def test_sequential_compose():
     relu = Sequential(Sequential(*layers[:2]), Sequential(*layers[2:])).cuda()
     bound = Ticket.from_bound([-1, -1], [1, 1]).cuda()
 
-    state = (Ticket.from_ticket(bound), list())
+    state = (Ticket.from_ticket(bound), Trace())
     cert = relu.certify(bound)
     state = cert.forward(state)
 
@@ -61,7 +62,7 @@ def test_sequential_compose():
     relu = Sequential(Sequential(*layers[:3]), Sequential(*layers[3:])).cuda()
     bound = Ticket.from_bound([-1, -1], [1, 1]).cuda()
 
-    state = (Ticket.from_ticket(bound), list())
+    state = (Ticket.from_ticket(bound), Trace())
     cert = relu.certify(bound)
     state = cert.forward(state)
 

@@ -1,6 +1,7 @@
 import logging
 import torch
 
+from torchpoly.cert.certificate import Trace
 from torchpoly.nn.linear import Linear
 from torchpoly.cert.ticket import Ticket
 
@@ -24,7 +25,7 @@ def test_linear_simple():
     model = make_linear_simple()
     bound = Ticket.from_bound([-1, -1], [1, 1]).cuda()
 
-    state = (Ticket.from_ticket(bound), list())
+    state = (Ticket.from_ticket(bound), Trace())
     for layer in model:
         cert = layer.cuda().certify(bound)
         state = cert.forward(state)

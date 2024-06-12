@@ -1,6 +1,7 @@
 import enum
 import torch
 
+from torchpoly.cert.certificate import Trace
 from torchpoly.cert.ticket import Ticket
 from torchpoly.nn.module import Module
 
@@ -36,7 +37,7 @@ class Verifier(Ticket):
     def forward(self, model: Module, x: Ticket, device=None) -> VerifyResult:
         """Verify the property of the model."""
         cert = model.certify(x, device=device)
-        x, _ = cert.forward((Ticket.from_ticket(x), list()))
+        x, _ = cert.forward((Ticket.from_ticket(x), Trace()))
 
         x = super(Verifier, self).forward(x, with_alg=False)
 

@@ -3,7 +3,8 @@ from typing import List, Tuple
 from torchpoly.cert.ticket import Ticket
 
 
-Trace = List["Certificate"]
+class Trace(List["Certificate"]):
+    pass
 
 
 class Certificate:
