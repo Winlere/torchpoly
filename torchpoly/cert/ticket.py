@@ -2,10 +2,53 @@ import logging
 import torch
 import torch.nn as nn
 
-from typing import List
+from typing import List, Tuple
 
 
 logger = logging.getLogger(__name__)
+
+
+def forward_impl(
+    self_alb: torch.Tensor,
+    self_aub: torch.Tensor,
+    self_alb_bias: torch.Tensor,
+    self_aub_bias: torch.Tensor,
+    x_lb: torch.Tensor,
+    x_ub: torch.Tensor,
+    x_alb: torch.Tensor,
+    x_aub: torch.Tensor,
+    x_alb_bias: torch.Tensor,
+    x_aub_bias: torch.Tensor,
+    with_alg: bool,
+) -> Tuple[
+    torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor
+]:
+    alb_lb = (self_alb + self_alb.abs()) / 2
+    alb_ub = (self_alb - self_alb.abs()) / 2
+
+    aub_lb = (self_aub - self_aub.abs()) / 2
+    aub_ub = (self_aub + self_aub.abs()) / 2
+
+    new_lb = (alb_lb @ x_lb) + (alb_ub @ x_ub) + self_alb_bias
+    new_ub = (aub_lb @ x_lb) + (aub_ub @ x_ub) + self_aub_bias
+
+    if with_alg:
+        new_alb = alb_lb @ x_alb + alb_ub @ x_aub
+        new_aub = aub_lb @ x_alb + aub_ub @ x_aub
+
+        new_alb_bias = alb_lb @ x_alb_bias + alb_ub @ x_aub_bias + self_alb_bias
+        new_aub_bias = aub_lb @ x_alb_bias + aub_ub @ x_aub_bias + self_aub_bias
+    else:
+        new_alb = self_alb.clone()
+        new_aub = self_aub.clone()
+
+        new_alb_bias = self_alb_bias.clone()
+        new_aub_bias = self_aub_bias.clone()
+
+    return new_lb, new_ub, new_alb, new_aub, new_alb_bias, new_aub_bias
+
+
+forward_impl_optimized = None
 
 
 class Ticket(nn.Module):
@@ -78,33 +121,36 @@ class Ticket(nn.Module):
         ticket.aub_bias.copy_(torch.tensor(ub, **factory_kwargs))
         return ticket
 
-    def forward(self, x: "Ticket", with_alg: bool = True) -> "Ticket":
+    def forward(
+        self,
+        x: "Ticket",
+        with_alg: bool = True,
+        use_jit: bool = False,
+    ) -> "Ticket":
+        if use_jit:
+            global forward_impl_optimized
+            if forward_impl_optimized is None:
+                forward_impl_optimized = torch.compile(forward_impl)
+
+            forward_fn = forward_impl_optimized
+        else:
+            forward_fn = forward_impl
+
         with torch.no_grad():
-            alb_lb = (self.alb + self.alb.abs()) / 2
-            alb_ub = (self.alb - self.alb.abs()) / 2
-
-            aub_lb = (self.aub - self.aub.abs()) / 2
-            aub_ub = (self.aub + self.aub.abs()) / 2
-
-            new_lb = (alb_lb @ x.lb) + (alb_ub @ x.ub) + self.alb_bias
-            new_ub = (aub_lb @ x.lb) + (aub_ub @ x.ub) + self.aub_bias
-
-            if with_alg:
-                new_alb = alb_lb @ x.alb + alb_ub @ x.aub
-                new_aub = aub_lb @ x.alb + aub_ub @ x.aub
-
-                new_alb_bias = alb_lb @ x.alb_bias + alb_ub @ x.aub_bias + self.alb_bias
-                new_aub_bias = aub_lb @ x.alb_bias + aub_ub @ x.aub_bias + self.aub_bias
-            else:
-                new_alb = self.alb.clone()
-                new_aub = self.aub.clone()
-
-                new_alb_bias = self.alb_bias.clone()
-                new_aub_bias = self.aub_bias.clone()
+            new_lb, new_ub, new_alb, new_aub, new_alb_bias, new_aub_bias = forward_fn(
+                self.alb,
+                self.aub,
+                self.alb_bias,
+                self.aub_bias,
+                x.lb,
+                x.ub,
+                x.alb,
+                x.aub,
+                x.alb_bias,
+                x.aub_bias,
+                with_alg,
+            )
 
         ticket = Ticket(new_lb, new_ub, new_alb, new_aub, new_alb_bias, new_aub_bias)
-
-        # logger.debug(f"lb={ticket.lb} ub={ticket.ub}")
-        # logger.debug(f"alb_lb={alb_lb} alb_ub={alb_ub} aub_lb={aub_lb} aub_ub={aub_ub}")
 
         return ticket
