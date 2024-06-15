@@ -57,7 +57,7 @@ def create_sequencial_from_dirty(model: nn.Module, post_cond_layer:nn.Module = N
         if isinstance(layer, nn.Linear):
             layers.append(deeppoly.linear.ArgumentedLinear(layer))
         elif isinstance(layer, nn.ReLU):
-            layers.append(deeppoly.relu.ArgumentedRelu(torch.device("cuda")))
+            layers.append(deeppoly.relu.ArgumentedRelu(device=device))
         else:
             # print(f"Warning: Unknown layer (ignoring) {layer}")
             pass
